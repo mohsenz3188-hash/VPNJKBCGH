@@ -48,7 +48,7 @@ jobs:
           [ -f gradle.properties ] && mv -f gradle.properties android/gradle.properties
           [ -f build.gradle ] && mv -f build.gradle android/app/build.gradle
 
-      - name: Fix MainActivity, Telegram Xray Routing, DNS, and SDK
+      - name: Fix MainActivity, ShopScreen build, Telegram Routing, and SDK
         run: |
           mkdir -p android/app/src/main/kotlin/com/vpnsopr/gaming
           cat <<'KOTLIN' > android/app/src/main/kotlin/com/vpnsopr/gaming/MainActivity.kt
@@ -66,6 +66,19 @@ jobs:
               txt = re.sub(r'\.withValues\(alpha:\s*([^)]+)\)', r'.withOpacity(\1)', txt)
               txt = txt.replace('CardThemeData(', 'CardTheme(')
               p.write_text(txt)
+
+          shop_p = pathlib.Path("lib/screens/shop_screen.dart")
+          if shop_p.exists():
+              stxt = shop_p.read_text()
+              parts = stxt.split("Widget build(BuildContext context) {")
+              if len(parts) == 2:
+                  parts[1] = re.sub(
+                      r'\s*if \(!engine\.canFulfillVolume\(plan\.volumeGb\)\) \{.*?return;\s*\}',
+                      '',
+                      parts[1],
+                      flags=re.DOTALL
+                  )
+                  shop_p.write_text("Widget build(BuildContext context) {".join(parts))
 
           svc = pathlib.Path("lib/services/vpn_engine_service.dart")
           if svc.exists():
@@ -118,3 +131,4 @@ jobs:
         with:
           name: vpnsopr-turbo-apks
           path: build/app/outputs/flutter-apk/*.apk
+          
